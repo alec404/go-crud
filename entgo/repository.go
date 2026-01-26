@@ -115,7 +115,7 @@ func (r *Repository[
 
 	count, err := builder.Count(ctx)
 	if err != nil {
-		log.Errorf("query count failed: %s", err.Error())
+		log.Context(ctx).Errorf("query count failed: %s", err.Error())
 		return 0, errors.New("query count failed")
 	}
 
@@ -144,7 +144,7 @@ func (r *Repository[
 
 	exists, err := builder.Exist(ctx)
 	if err != nil {
-		log.Errorf("exists check failed: %s", err.Error())
+		log.Context(ctx).Errorf("exists check failed: %s", err.Error())
 		return false, errors.New("exists check failed")
 	}
 
@@ -179,7 +179,7 @@ func (r *Repository[
 
 	entities, err := builder.All(ctx)
 	if err != nil {
-		log.Errorf("query list failed: %s", err.Error())
+		log.Context(ctx).Errorf("query list failed: %s", err.Error())
 		return nil, errors.New("query list failed")
 	}
 
@@ -196,7 +196,7 @@ func (r *Repository[
 		}
 		count, err = countBuilder.Count(ctx)
 		if err != nil {
-			log.Errorf("query count failed: %s", err.Error())
+			log.Context(ctx).Errorf("query count failed: %s", err.Error())
 			return nil, errors.New("query count failed")
 		}
 	}
@@ -237,7 +237,7 @@ func (r *Repository[
 
 	entities, err := builder.All(ctx)
 	if err != nil {
-		log.Errorf("query list failed: %s", err.Error())
+		log.Context(ctx).Errorf("query list failed: %s", err.Error())
 		return nil, errors.New("query list failed")
 	}
 
@@ -283,7 +283,7 @@ func (r *Repository[
 		}
 		count, err = countBuilder.Count(ctx)
 		if err != nil {
-			log.Errorf("query count failed: %s", err.Error())
+			log.Context(ctx).Errorf("query count failed: %s", err.Error())
 			return nil, errors.New("query count failed")
 		}
 	}
@@ -420,7 +420,7 @@ func (r *Repository[
 
 	entities, err := builder.All(ctx)
 	if err != nil {
-		log.Errorf("query list failed: %s", err.Error())
+		log.Context(ctx).Errorf("query list failed: %s", err.Error())
 		return nil, errors.New("query list failed")
 	}
 
@@ -437,7 +437,7 @@ func (r *Repository[
 		}
 		count, err = countBuilder.Count(ctx)
 		if err != nil {
-			log.Errorf("query count failed: %s", err.Error())
+			log.Context(ctx).Errorf("query count failed: %s", err.Error())
 			return nil, errors.New("query count failed")
 		}
 	}
@@ -478,7 +478,7 @@ func (r *Repository[
 
 	entities, err := builder.All(ctx)
 	if err != nil {
-		log.Errorf("query list failed: %s", err.Error())
+		log.Context(ctx).Errorf("query list failed: %s", err.Error())
 		return nil, errors.New("query list failed")
 	}
 
@@ -524,7 +524,7 @@ func (r *Repository[
 		}
 		count, err = countBuilder.Count(ctx)
 		if err != nil {
-			log.Errorf("query count failed: %s", err.Error())
+			log.Context(ctx).Errorf("query count failed: %s", err.Error())
 			return nil, errors.New("query count failed")
 		}
 	}
@@ -564,12 +564,12 @@ func (r *Repository[
 	//if req.Query != nil || req.OrQuery != nil {
 	//	whereSelectors, err = r.queryStringFilter.BuildSelectors(req.GetQuery(), req.GetOrQuery())
 	//	if err != nil {
-	//		log.Errorf("build query string filter selectors failed: %s", err.Error())
+	//		log.Context(ctx).Errorf("build query string filter selectors failed: %s", err.Error())
 	//	}
 	//} else if req.FilterExpr != nil {
 	//	whereSelectors, err = r.structuredFilter.BuildSelectors(req.GetFilterExpr())
 	//	if err != nil {
-	//		log.Errorf("build structured filter selectors failed: %s", err.Error())
+	//		log.Context(ctx).Errorf("build structured filter selectors failed: %s", err.Error())
 	//	}
 	//}
 	filterExpr, err := r.ConvertFilterByPaginationRequest(req)
@@ -709,7 +709,7 @@ func (r *Repository[
 		return nil, errors.New("dto proto message is nil")
 	}
 	if err := fieldmaskutil.FilterByFieldMask(trans.Ptr(dtoProto), createMask); err != nil {
-		log.Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
+		log.Context(ctx).Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
 		return nil, err
 	}
 
@@ -719,7 +719,7 @@ func (r *Repository[
 
 	entity, err := builder.Save(ctx)
 	if err != nil {
-		log.Errorf("create data failed: %s", err.Error())
+		log.Context(ctx).Errorf("create data failed: %s", err.Error())
 		return nil, err
 	}
 
@@ -756,7 +756,7 @@ func (r *Repository[
 		return errors.New("dto proto message is nil")
 	}
 	if err := fieldmaskutil.FilterByFieldMask(trans.Ptr(dtoProto), createMask); err != nil {
-		log.Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
+		log.Context(ctx).Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
 		return err
 	}
 
@@ -765,7 +765,7 @@ func (r *Repository[
 	}
 
 	if err := builder.Exec(ctx); err != nil {
-		log.Errorf("create data failed: %s", err.Error())
+		log.Context(ctx).Errorf("create data failed: %s", err.Error())
 		return err
 	}
 
@@ -807,7 +807,7 @@ func (r *Repository[
 		}
 
 		if err := fieldmaskutil.FilterByFieldMask(trans.Ptr(dtoProto), createMask); err != nil {
-			log.Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
+			log.Context(ctx).Errorf("invalid field mask [%v], error: %s", createMask, err.Error())
 			return nil, err
 		}
 		// 将 DTO 映射为 ENTITY（依赖 mapper 提供 ToEntity）
@@ -817,7 +817,7 @@ func (r *Repository[
 
 	createdEnts, err := builder.Save(ctx)
 	if err != nil {
-		log.Errorf("bulk create failed: %s", err.Error())
+		log.Context(ctx).Errorf("bulk create failed: %s", err.Error())
 		return nil, err
 	}
 
@@ -863,7 +863,7 @@ func (r *Repository[
 		return nil, errors.New("dto proto message is nil")
 	}
 	if err := fieldmaskutil.FilterByFieldMask(trans.Ptr(dtoProto), updateMask); err != nil {
-		log.Errorf("invalid field mask [%v], error: %s", updateMask, err.Error())
+		log.Context(ctx).Errorf("invalid field mask [%v], error: %s", updateMask, err.Error())
 		return nil, err
 	}
 
@@ -876,7 +876,7 @@ func (r *Repository[
 	var err error
 	var entity *ENTITY
 	if entity, err = builder.Save(ctx); err != nil {
-		log.Errorf("update one data failed: %s", err.Error())
+		log.Context(ctx).Errorf("update one data failed: %s", err.Error())
 		return nil, err
 	}
 
@@ -974,7 +974,7 @@ func (r *Repository[
 		return errors.New("dto proto message is nil")
 	}
 	if err := fieldmaskutil.FilterByFieldMask(trans.Ptr(dtoProto), updateMask); err != nil {
-		log.Errorf("invalid field mask [%v], error: %s", updateMask, err.Error())
+		log.Context(ctx).Errorf("invalid field mask [%v], error: %s", updateMask, err.Error())
 		return err
 	}
 
@@ -985,7 +985,7 @@ func (r *Repository[
 	r.applyUpdateNilFieldMask(dtoProto, updateMask, builder)
 
 	if err := builder.Exec(ctx); err != nil {
-		log.Errorf("update one data failed: %s", err.Error())
+		log.Context(ctx).Errorf("update one data failed: %s", err.Error())
 		return err
 	}
 
@@ -1015,7 +1015,7 @@ func (r *Repository[
 	var affected int
 	var err error
 	if affected, err = builder.Exec(ctx); err != nil {
-		log.Errorf("delete failed: %s", err.Error())
+		log.Context(ctx).Errorf("delete failed: %s", err.Error())
 		return 0, errors.New("delete failed")
 	}
 

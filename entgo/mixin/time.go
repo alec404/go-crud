@@ -3,6 +3,7 @@ package mixin
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 )
 
@@ -14,8 +15,12 @@ type CreatedAt struct{ mixin.Schema }
 
 func (CreatedAt) Fields() []ent.Field {
 	return []ent.Field{
+		// 创建时间
 		field.Time("created_at").
 			Comment("创建时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Immutable().
 			Optional().
 			Nillable(),
@@ -30,8 +35,12 @@ type UpdatedAt struct{ mixin.Schema }
 
 func (UpdatedAt) Fields() []ent.Field {
 	return []ent.Field{
+		// 更新时间
 		field.Time("updated_at").
 			Comment("更新时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Optional().
 			Nillable(),
 	}
@@ -45,10 +54,21 @@ type DeletedAt struct{ mixin.Schema }
 
 func (DeletedAt) Fields() []ent.Field {
 	return []ent.Field{
+		// 删除时间
 		field.Time("deleted_at").
 			Comment("删除时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Optional().
 			Nillable(),
+	}
+}
+
+// Indexes of the DeletedAt mixin.
+func (DeletedAt) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("deleted_at"),
 	}
 }
 
@@ -74,8 +94,12 @@ type CreateTime struct{ mixin.Schema }
 
 func (CreateTime) Fields() []ent.Field {
 	return []ent.Field{
+		// 创建时间
 		field.Time("create_time").
 			Comment("创建时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Immutable().
 			Optional().
 			Nillable(),
@@ -90,8 +114,12 @@ type UpdateTime struct{ mixin.Schema }
 
 func (UpdateTime) Fields() []ent.Field {
 	return []ent.Field{
+		// 更新时间
 		field.Time("update_time").
 			Comment("更新时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Optional().
 			Nillable(),
 	}
@@ -105,10 +133,21 @@ type DeleteTime struct{ mixin.Schema }
 
 func (DeleteTime) Fields() []ent.Field {
 	return []ent.Field{
+		// 删除时间
 		field.Time("delete_time").
 			Comment("删除时间").
+			SchemaType(map[string]string{
+				"mysql": "DATETIME",
+			}).
 			Optional().
 			Nillable(),
+	}
+}
+
+// Indexes of the DeleteTime mixin.
+func (DeleteTime) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("delete_time"),
 	}
 }
 
@@ -125,3 +164,5 @@ func (Time) Fields() []ent.Field {
 	fields = append(fields, DeleteTime{}.Fields()...)
 	return fields
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

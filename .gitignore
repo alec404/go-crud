@@ -45,3 +45,5 @@ Files/
 
 # Debugging files
 __debug_bin*
+
+api/protos/buf.*
