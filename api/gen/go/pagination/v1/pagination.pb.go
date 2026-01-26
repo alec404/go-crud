@@ -1337,7 +1337,7 @@ type isPaginationRequest_FilteringType interface {
 }
 
 type PaginationRequest_Query struct {
-	// JSON字符串过滤条件，基础语法：{"field1":"val1", "field2___icontains":"val2"}，具体请参见：https://github.com/tx7do/go-crud/tree/main/pagination/filter/README.md
+	// JSON字符串过滤条件，基础语法：{"field1":"val1", "field2___icontains":"val2"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.md
 	Query string `protobuf:"bytes,10,opt,name=query,proto3,oneof"`
 }
 
@@ -1507,7 +1507,7 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	"\x0ePagingResponse\x12\x8e\x01\n" +
 	"\x05total\x18\x01 \x01(\v2\x1c.google.protobuf.UInt64ValueBU\xbaGR\x92\x02O总记录数（仅Page/Offset分页有效，Token分页通常不返回总数）H\x00R\x05total\x88\x01\x01\x12\x14\n" +
 	"\x05items\x18\x02 \x03(\fR\x05itemsB\b\n" +
-	"\x06_total\"\xf4\n" +
+	"\x06_total\"\xf6\n" +
 	"\n" +
 	"\x11PaginationRequest\x12c\n" +
 	"\n" +
@@ -1515,9 +1515,9 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	"\foffset_based\x18\x02 \x01(\v2!.pagination.OffsetBasedPaginationB$\xbaG!\x92\x02\x1e基于偏移量的分页方式H\x00R\voffsetBased\x12f\n" +
 	"\vtoken_based\x18\x03 \x01(\v2 .pagination.TokenBasedPaginationB!\xbaG\x1e\x92\x02\x1b基于令牌的分页方式H\x00R\n" +
 	"tokenBased\x12D\n" +
-	"\tno_paging\x18\x04 \x01(\v2\x14.pagination.NoPagingB\x0f\xbaG\f\x92\x02\t不分页H\x00R\bnoPaging\x12\xf6\x01\n" +
+	"\tno_paging\x18\x04 \x01(\v2\x14.pagination.NoPagingB\x0f\xbaG\f\x92\x02\t不分页H\x00R\bnoPaging\x12\xf8\x01\n" +
 	"\x05query\x18\n" +
-	" \x01(\tB\xdd\x01\xbaG\xd9\x01:0\x12.{\"field1\":\"val1\", \"field2___icontains\":\"val2\"}\x92\x02\xa3\x01JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/tx7do/go-crud/tree/main/pagination/filter/README.mdH\x01R\x05query\x12H\n" +
+	" \x01(\tB\xdf\x01\xbaG\xdb\x01:0\x12.{\"field1\":\"val1\", \"field2___icontains\":\"val2\"}\x92\x02\xa5\x01JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.mdH\x01R\x05query\x12H\n" +
 	"\x06filter\x18\v \x01(\tB.\xbaG+\x92\x02(Google AIP规范字符串过滤条件。H\x01R\x06filter\x12\xbd\x01\n" +
 	"\vfilter_expr\x18\f \x01(\v2\x16.pagination.FilterExprB\x81\x01\xbaG~\x92\x02{复杂过滤表达式，优先于已弃用的 query/or_query。服务端应以此为准并执行严格校验与参数化。H\x01R\n" +
 	"filterExpr\x12G\n" +

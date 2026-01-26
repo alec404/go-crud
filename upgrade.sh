@@ -19,3 +19,7 @@ go mod tidy
 cd $DIR/entgo
 go get all
 go mod tidy
+
+cd $DIR/viwer
+go get all
+go mod tidy

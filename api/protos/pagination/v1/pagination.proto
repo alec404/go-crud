@@ -453,11 +453,11 @@ message PaginationRequest {
   }
 
   oneof filtering_type {
-    // JSON字符串过滤条件，基础语法：{"field1":"val1", "field2___icontains":"val2"}，具体请参见：https://github.com/tx7do/go-crud/tree/main/pagination/filter/README.md
+    // JSON字符串过滤条件，基础语法：{"field1":"val1", "field2___icontains":"val2"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.md
     string query = 10 [
       json_name = "query",
       (gnostic.openapi.v3.property) = {
-        description: "JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/tx7do/go-crud/tree/main/pagination/filter/README.md",
+        description: "JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.md",
         example: { yaml: "{\"field1\":\"val1\", \"field2___icontains\":\"val2\"}" }
       }
     ];
