@@ -815,6 +815,8 @@ type PagingRequest struct {
 	Token *string `protobuf:"bytes,5,opt,name=token,proto3,oneof" json:"token,omitempty"`
 	// 是否不分页，如果为true，则page和pageSize参数无效。
 	NoPaging *bool `protobuf:"varint,6,opt,name=no_paging,json=noPaging,proto3,oneof" json:"no_paging,omitempty"`
+	// 是否跳过总数统计（COUNT）。为 true 时服务端不计算 total，以提升查询性能；响应中的 total 可能为 0 或不返回（以接口实现为准）。
+	NoTotal *bool `protobuf:"varint,7,opt,name=no_total,json=noTotal,proto3,oneof" json:"no_total,omitempty"`
 	// Types that are valid to be assigned to FilteringType:
 	//
 	//	*PagingRequest_Query
@@ -899,6 +901,13 @@ func (x *PagingRequest) GetToken() string {
 func (x *PagingRequest) GetNoPaging() bool {
 	if x != nil && x.NoPaging != nil {
 		return *x.NoPaging
+	}
+	return false
+}
+
+func (x *PagingRequest) GetNoTotal() bool {
+	if x != nil && x.NoTotal != nil {
+		return *x.NoTotal
 	}
 	return false
 }
@@ -1457,23 +1466,24 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	"\x05token\x18\x01 \x01(\tBW\xbaGT\x92\x02Q上一页最后一条记录的游标（如ID/时间戳+ID，首次请求为空）R\x05token\x12d\n" +
 	"\tpage_size\x18\x02 \x01(\rBG\xbaGD\x8a\x02\t\t\x00\x00\x00\x00\x00\x00$@\x92\x025每页条数（默认10，建议设置上限如100）R\bpageSize\"\n" +
 	"\n" +
-	"\bNoPaging\"\x8e\r\n" +
+	"\bNoPaging\"\xf5\x0e\n" +
 	"\rPagingRequest\x12Q\n" +
 	"\x04page\x18\x01 \x01(\rB8\xbaG5\x8a\x02\t\t\x00\x00\x00\x00\x00\x00\xf0?\x92\x02&当前页码（从1开始，默认1）H\x01R\x04page\x88\x01\x01\x12i\n" +
 	"\tpage_size\x18\x02 \x01(\rBG\xbaGD\x8a\x02\t\t\x00\x00\x00\x00\x00\x00$@\x92\x025每页条数（默认10，建议设置上限如100）H\x02R\bpageSize\x88\x01\x01\x12[\n" +
 	"\x06offset\x18\x03 \x01(\x04B>\xbaG;\x8a\x02\t\t\x00\x00\x00\x00\x00\x00\x00\x00\x92\x02,跳过的记录数（从0开始，默认0）H\x03R\x06offset\x88\x01\x01\x12n\n" +
 	"\x05limit\x18\x04 \x01(\rBS\xbaGP\x8a\x02\t\t\x00\x00\x00\x00\x00\x00$@\x92\x02A最多返回的记录数（默认10，建议设置上限如100）H\x04R\x05limit\x88\x01\x01\x12r\n" +
 	"\x05token\x18\x05 \x01(\tBW\xbaGT\x92\x02Q上一页最后一条记录的游标（如ID/时间戳+ID，首次请求为空）H\x05R\x05token\x88\x01\x01\x12k\n" +
-	"\tno_paging\x18\x06 \x01(\bBI\xbaGF\x92\x02C是否不分页，如果为true，则page和pageSize参数无效。H\x06R\bnoPaging\x88\x01\x01\x12\xf8\x01\n" +
+	"\tno_paging\x18\x06 \x01(\bBI\xbaGF\x92\x02C是否不分页，如果为true，则page和pageSize参数无效。H\x06R\bnoPaging\x88\x01\x01\x12\xd7\x01\n" +
+	"\bno_total\x18\a \x01(\bB\xb6\x01\xbaG\xb2\x01\x92\x02\xae\x01是否跳过总数统计（COUNT）。为 true 时服务端不计算 total，以提升查询性能；响应中的 total 可能为 0 或不返回（以接口实现为准）。H\aR\anoTotal\x88\x01\x01\x12\xf8\x01\n" +
 	"\x05query\x18\n" +
 	" \x01(\tB\xdf\x01\xbaG\xdb\x01:0\x12.{\"field1\":\"val1\", \"field2___icontains\":\"val2\"}\x92\x02\xa5\x01JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.mdH\x00R\x05query\x12H\n" +
 	"\x06filter\x18\v \x01(\tB.\xbaG+\x92\x02(Google AIP规范字符串过滤条件。H\x00R\x06filter\x12\xbd\x01\n" +
 	"\vfilter_expr\x18\f \x01(\v2\x16.pagination.FilterExprB\x81\x01\xbaG~\x92\x02{复杂过滤表达式，优先于已弃用的 query/or_query。服务端应以此为准并执行严格校验与参数化。H\x00R\n" +
 	"filterExpr\x12G\n" +
-	"\border_by\x18\x14 \x01(\tB'\xbaG$:\x13\x12\x11{\"val1\", \"-val2\"}\x92\x02\f排序条件H\aR\aorderBy\x88\x01\x01\x12A\n" +
+	"\border_by\x18\x14 \x01(\tB'\xbaG$:\x13\x12\x11{\"val1\", \"-val2\"}\x92\x02\f排序条件H\bR\aorderBy\x88\x01\x01\x12A\n" +
 	"\asorting\x18\x15 \x03(\v2\x13.pagination.SortingB\x12\xbaG\x0f\x92\x02\f排序规则R\asorting\x12\x8d\x02\n" +
 	"\n" +
-	"field_mask\x18\x1e \x01(\v2\x1a.google.protobuf.FieldMaskB\xcc\x01\xbaG\xc8\x01:\x16\x12\x14id,realName,userName\x92\x02\xac\x01字段掩码，其作用为SELECT中的字段，其语法为使用逗号分隔字段名，例如：id,realName,userName。如果为空则选中所有字段，即SELECT *。H\bR\tfieldMask\x88\x01\x01B\x10\n" +
+	"field_mask\x18\x1e \x01(\v2\x1a.google.protobuf.FieldMaskB\xcc\x01\xbaG\xc8\x01:\x16\x12\x14id,realName,userName\x92\x02\xac\x01字段掩码，其作用为SELECT中的字段，其语法为使用逗号分隔字段名，例如：id,realName,userName。如果为空则选中所有字段，即SELECT *。H\tR\tfieldMask\x88\x01\x01B\x10\n" +
 	"\x0efiltering_typeB\a\n" +
 	"\x05_pageB\f\n" +
 	"\n" +
@@ -1483,6 +1493,7 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	"\x06_tokenB\f\n" +
 	"\n" +
 	"_no_pagingB\v\n" +
+	"\t_no_totalB\v\n" +
 	"\t_order_byB\r\n" +
 	"\v_field_mask\"\xea\x06\n" +
 	"\x16PaginationResponseMeta\x12\x8e\x01\n" +
@@ -1507,7 +1518,7 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	"\x0ePagingResponse\x12\x8e\x01\n" +
 	"\x05total\x18\x01 \x01(\v2\x1c.google.protobuf.UInt64ValueBU\xbaGR\x92\x02O总记录数（仅Page/Offset分页有效，Token分页通常不返回总数）H\x00R\x05total\x88\x01\x01\x12\x14\n" +
 	"\x05items\x18\x02 \x03(\fR\x05itemsB\b\n" +
-	"\x06_total\"\xf6\n" +
+	"\x06_total\"\xf8\n" +
 	"\n" +
 	"\x11PaginationRequest\x12c\n" +
 	"\n" +
@@ -1520,8 +1531,8 @@ const file_pagination_v1_pagination_proto_rawDesc = "" +
 	" \x01(\tB\xdf\x01\xbaG\xdb\x01:0\x12.{\"field1\":\"val1\", \"field2___icontains\":\"val2\"}\x92\x02\xa5\x01JSON字符串过滤条件，基础语法：{\"key1\":\"val1\",\"key2\":\"val2\"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.mdH\x01R\x05query\x12H\n" +
 	"\x06filter\x18\v \x01(\tB.\xbaG+\x92\x02(Google AIP规范字符串过滤条件。H\x01R\x06filter\x12\xbd\x01\n" +
 	"\vfilter_expr\x18\f \x01(\v2\x16.pagination.FilterExprB\x81\x01\xbaG~\x92\x02{复杂过滤表达式，优先于已弃用的 query/or_query。服务端应以此为准并执行严格校验与参数化。H\x01R\n" +
-	"filterExpr\x12G\n" +
-	"\border_by\x18\x14 \x01(\tB'\xbaG$:\x13\x12\x11{\"val1\", \"-val2\"}\x92\x02\f排序条件H\x02R\aorderBy\x88\x01\x01\x12A\n" +
+	"filterExpr\x12I\n" +
+	"\border_by\x18\x14 \x01(\tB)\xbaG&:\x15\x12\x13val1 desc, val2 asc\x92\x02\f排序条件H\x02R\aorderBy\x88\x01\x01\x12A\n" +
 	"\asorting\x18\x15 \x03(\v2\x13.pagination.SortingB\x12\xbaG\x0f\x92\x02\f排序规则R\asorting\x12\x8d\x02\n" +
 	"\n" +
 	"field_mask\x18\x1e \x01(\v2\x1a.google.protobuf.FieldMaskB\xcc\x01\xbaG\xc8\x01:\x16\x12\x14id,realName,userName\x92\x02\xac\x01字段掩码，其作用为SELECT中的字段，其语法为使用逗号分隔字段名，例如：id,realName,userName。如果为空则选中所有字段，即SELECT *。H\x03R\tfieldMask\x88\x01\x01B\x11\n" +

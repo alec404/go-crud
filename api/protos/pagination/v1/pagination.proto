@@ -282,6 +282,14 @@ message PagingRequest {
     }
   ];
 
+  // 是否跳过总数统计（COUNT）。为 true 时服务端不计算 total，以提升查询性能；响应中的 total 可能为 0 或不返回（以接口实现为准）。
+  optional bool no_total = 7 [
+    json_name = "noTotal",
+    (gnostic.openapi.v3.property) = {
+      description: "是否跳过总数统计（COUNT）。为 true 时服务端不计算 total，以提升查询性能；响应中的 total 可能为 0 或不返回（以接口实现为准）。"
+    }
+  ];
+
   oneof filtering_type {
     // JSON字符串过滤条件，基础语法：{"field1":"val1", "field2___icontains":"val2"}，具体请参见：https://github.com/alec404/go-crud/tree/main/pagination/filter/README.md
     string query = 10 [
@@ -484,7 +492,7 @@ message PaginationRequest {
     json_name = "orderBy",
     (gnostic.openapi.v3.property) = {
       description: "排序条件"
-      example: { yaml: "{\"val1\", \"-val2\"}" }
+      example: { yaml: "val1 desc, val2 asc" }
     }
   ];
 
