@@ -2,10 +2,10 @@ module github.com/alec404/go-crud/pagination
 
 go 1.25.4
 
-replace github.com/alec404/go-crud/api => ../api
+// replace github.com/alec404/go-crud/api => ../api
 
 require (
-	github.com/alec404/go-crud/api v0.0.2
+	github.com/alec404/go-crud/api v0.0.3
 	github.com/alec404/go-libs v0.0.1
 	github.com/go-kratos/kratos/v2 v2.9.2
 	github.com/google/go-cmp v0.7.0
