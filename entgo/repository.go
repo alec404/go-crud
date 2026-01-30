@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/go-kratos/kratos/v2/log"
+
 	"github.com/alec404/go-libs/fieldmaskutil"
 	"github.com/alec404/go-libs/mapper"
 	"github.com/alec404/go-libs/trans"
-	"github.com/go-kratos/kratos/v2/log"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -20,6 +21,7 @@ import (
 	"github.com/alec404/go-crud/entgo/sorting"
 	"github.com/alec404/go-crud/entgo/update"
 	paginationFilter "github.com/alec404/go-crud/pagination/filter"
+	paginationSorting "github.com/alec404/go-crud/pagination/sorting"
 )
 
 // Repository Ent查询器
@@ -32,18 +34,14 @@ type Repository[
 ] struct {
 	mapper *mapper.CopierMapper[DTO, ENTITY]
 
-	queryStringSorting *sorting.QueryStringSorting
-	structuredSorting  *sorting.StructuredSorting
-
 	offsetPaginator *paging.OffsetPaginator
 	pagePaginator   *paging.PagePaginator
 	tokenPaginator  *paging.TokenPaginator
 
-	queryStringFilter *filter.QueryStringFilter
-	structuredFilter  *filter.StructuredFilter
+	structuredFilter *filter.StructuredFilter
 
-	queryStringConverter  *paginationFilter.QueryStringConverter
-	filterStringConverter *paginationFilter.FilterStringConverter
+	structuredSorting      *sorting.StructuredSorting
+	orderByStringConverter *paginationSorting.OrderByStringConverter
 
 	fieldSelector *field.Selector
 }
@@ -70,20 +68,16 @@ func NewRepository[
 	]{
 		mapper: mapper,
 
-		queryStringSorting: sorting.NewQueryStringSorting(),
-		structuredSorting:  sorting.NewStructuredSorting(),
-
 		offsetPaginator: paging.NewOffsetPaginator(),
 		pagePaginator:   paging.NewPagePaginator(),
 		tokenPaginator:  paging.NewTokenPaginator(),
 
-		queryStringFilter: filter.NewQueryStringFilter(),
-		structuredFilter:  filter.NewStructuredFilter(),
-
 		fieldSelector: field.NewFieldSelector(),
 
-		queryStringConverter:  paginationFilter.NewQueryStringConverter(),
-		filterStringConverter: paginationFilter.NewFilterStringConverter(),
+		structuredFilter: filter.NewStructuredFilter(),
+
+		structuredSorting:      sorting.NewStructuredSorting(),
+		orderByStringConverter: paginationSorting.NewOrderByStringConverter(),
 	}
 }
 
@@ -190,7 +184,7 @@ func (r *Repository[
 	}
 
 	var count int
-	if countBuilder != nil {
+	if countBuilder != nil && !req.GetNoTotal() {
 		if len(whereSelectors) != 0 {
 			countBuilder.Modify(whereSelectors...)
 		}
@@ -320,18 +314,7 @@ func (r *Repository[
 	var selectSelector func(s *sql.Selector)
 
 	// filters
-	//if req.Query != nil || req.OrQuery != nil {
-	//	whereSelectors, err = r.queryStringFilter.BuildSelectors(req.GetQuery(), req.GetOrQuery())
-	//	if err != nil {
-	//		log.Errorf("build query string filter selectors failed: %s", err.Error())
-	//	}
-	//} else if req.FilterExpr != nil {
-	//	whereSelectors, err = r.structuredFilter.BuildSelectors(req.GetFilterExpr())
-	//	if err != nil {
-	//		log.Errorf("build structured filter selectors failed: %s", err.Error())
-	//	}
-	//}
-	filterExpr, err := r.ConvertFilterByPagingRequest(req)
+	filterExpr, err := paginationFilter.ConvertFilterByPagingRequest(req)
 	if err != nil {
 		log.Errorf("convert filter by pagination request failed: %s", err.Error())
 	}
@@ -362,7 +345,14 @@ func (r *Repository[
 			log.Errorf("build structured sorting selector failed: %s", err.Error())
 		}
 	} else if len(req.GetOrderBy()) > 0 {
-		sortingSelector, err = r.queryStringSorting.BuildSelector(req.GetOrderBy())
+		var sortings []*paginationV1.Sorting
+		sortings, err = r.orderByStringConverter.Convert(req.GetOrderBy())
+		if err != nil {
+			log.Errorf("convert order by string to sorting failed: %s", err.Error())
+			return nil, nil, err
+		}
+
+		sortingSelector, err = r.structuredSorting.BuildSelector(sortings)
 		if err != nil {
 			log.Errorf("build query string sorting selector failed: %s", err.Error())
 		}
@@ -385,7 +375,7 @@ func (r *Repository[
 		querySelectors = append(querySelectors, pagingSelector)
 	}
 
-	if querySelectors != nil {
+	if len(querySelectors) != 0 {
 		builder.Modify(querySelectors...)
 	}
 
@@ -561,18 +551,7 @@ func (r *Repository[
 	var selectSelector func(s *sql.Selector)
 
 	// filters
-	//if req.Query != nil || req.OrQuery != nil {
-	//	whereSelectors, err = r.queryStringFilter.BuildSelectors(req.GetQuery(), req.GetOrQuery())
-	//	if err != nil {
-	//		log.Context(ctx).Errorf("build query string filter selectors failed: %s", err.Error())
-	//	}
-	//} else if req.FilterExpr != nil {
-	//	whereSelectors, err = r.structuredFilter.BuildSelectors(req.GetFilterExpr())
-	//	if err != nil {
-	//		log.Context(ctx).Errorf("build structured filter selectors failed: %s", err.Error())
-	//	}
-	//}
-	filterExpr, err := r.ConvertFilterByPaginationRequest(req)
+	filterExpr, err := paginationFilter.ConvertFilterByPaginationRequest(req)
 	if err != nil {
 		log.Errorf("convert filter by pagination request failed: %s", err.Error())
 	}
@@ -599,7 +578,14 @@ func (r *Repository[
 			log.Errorf("build structured sorting selector failed: %s", err.Error())
 		}
 	} else if len(req.GetOrderBy()) > 0 {
-		sortingSelector, err = r.queryStringSorting.BuildSelector(req.GetOrderBy())
+		var sortings []*paginationV1.Sorting
+		sortings, err = r.orderByStringConverter.Convert(req.GetOrderBy())
+		if err != nil {
+			log.Errorf("convert order by string to sorting failed: %s", err.Error())
+			return nil, nil, err
+		}
+
+		sortingSelector, err = r.structuredSorting.BuildSelector(sortings)
 		if err != nil {
 			log.Errorf("build query string sorting selector failed: %s", err.Error())
 		}
@@ -621,7 +607,7 @@ func (r *Repository[
 		querySelectors = append(querySelectors, pagingSelector)
 	}
 
-	if querySelectors != nil {
+	if len(querySelectors) != 0 {
 		builder.Modify(querySelectors...)
 	}
 
@@ -1032,26 +1018,7 @@ func (r *Repository[
 ]) ConvertFilterByPagingRequest(
 	req *paginationV1.PagingRequest,
 ) (*paginationV1.FilterExpr, error) {
-	if req == nil {
-		return nil, nil
-	}
-
-	// 已有结构化表达式，直接返回
-	if req.GetFilterExpr() != nil {
-		return req.GetFilterExpr(), nil
-	}
-
-	// 优先使用 query/or_query 转换
-	if req.GetQuery() != "" || req.GetOrQuery() != "" {
-		return r.queryStringConverter.Convert(req.GetQuery(), req.GetOrQuery())
-	}
-
-	// 最后使用 filter 字符串转换
-	if req.GetFilter() != "" {
-		return r.filterStringConverter.Convert(req.GetFilter())
-	}
-
-	return nil, nil
+	return paginationFilter.ConvertFilterByPagingRequest(req)
 }
 
 // ConvertFilterByPaginationRequest 使用通用的分页请求参数转换过滤表达式
@@ -1064,24 +1031,5 @@ func (r *Repository[
 ]) ConvertFilterByPaginationRequest(
 	req *paginationV1.PaginationRequest,
 ) (*paginationV1.FilterExpr, error) {
-	if req == nil {
-		return nil, nil
-	}
-
-	// 已有结构化表达式，直接返回
-	if req.GetFilterExpr() != nil {
-		return req.GetFilterExpr(), nil
-	}
-
-	// 优先使用 query/or_query 转换
-	if req.GetQuery() != "" || req.GetOrQuery() != "" {
-		return r.queryStringConverter.Convert(req.GetQuery(), req.GetOrQuery())
-	}
-
-	// 最后使用 filter 字符串转换
-	if req.GetFilter() != "" {
-		return r.filterStringConverter.Convert(req.GetFilter())
-	}
-
-	return nil, nil
+	return paginationFilter.ConvertFilterByPaginationRequest(req)
 }

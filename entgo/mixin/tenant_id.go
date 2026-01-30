@@ -4,36 +4,29 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
+
+	"github.com/alec404/go-crud/entgo/rule"
 )
 
-// 确保 TenantID 实现了 ent.Mixin 接口
-var _ ent.Mixin = (*TenantID)(nil)
+type TenantID[IDT uint32 | uint64] struct{ mixin.Schema }
 
-type TenantID struct{ mixin.Schema }
-
-func (TenantID) Fields() []ent.Field {
+func (TenantID[IDT]) Fields() []ent.Field {
 	return []ent.Field{
 		field.Uint32("tenant_id").
 			Comment("租户ID").
 			Immutable().
+			Default(0).
 			Nillable().
 			Optional(),
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// 确保 TenantID64 实现了 ent.Mixin 接口
-var _ ent.Mixin = (*TenantID64)(nil)
-
-type TenantID64 struct{ mixin.Schema }
-
-func (TenantID64) Fields() []ent.Field {
-	return []ent.Field{
-		field.Uint64("tenant_id").
-			Comment("租户ID").
-			Immutable().
-			Nillable().
-			Optional(),
-	}
+func (TenantID[IDT]) Policy() ent.Policy {
+	return rule.TenantPrivacy[IDT]{}
 }
+
+//func (TenantID[IDT]) Interceptors() []ent.Interceptor {
+//	return []ent.Interceptor{
+//		interceptor.TenantInterceptor(),
+//	}
+//}

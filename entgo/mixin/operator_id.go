@@ -201,7 +201,6 @@ func (OperatorID) Fields() []ent.Field {
 	var fields []ent.Field
 	fields = append(fields, CreatedBy{}.Fields()...)
 	fields = append(fields, UpdatedBy{}.Fields()...)
-	fields = append(fields, DeletedBy{}.Fields()...)
 	return fields
 }
 
@@ -213,7 +212,6 @@ func (OperatorID64) Fields() []ent.Field {
 	var fields []ent.Field
 	fields = append(fields, CreatedBy64{}.Fields()...)
 	fields = append(fields, UpdatedBy64{}.Fields()...)
-	fields = append(fields, DeletedBy64{}.Fields()...)
 	return fields
 }
 

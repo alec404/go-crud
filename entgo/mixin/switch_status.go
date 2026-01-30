@@ -106,3 +106,21 @@ func (ActiveStatus) Fields() []ent.Field {
 			),
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// 确保 SwitchStatusStr 实现了 ent.Mixin 接口
+var _ ent.Mixin = (*SwitchStatusStr)(nil)
+
+type SwitchStatusStr struct {
+	mixin.Schema
+}
+
+func (SwitchStatusStr) Fields() []ent.Field {
+	return []ent.Field{
+		field.String("status").
+			Comment("status OFF: 禁用, ON: 启用").
+			Nillable().
+			Default("ON"),
+	}
+}

@@ -82,7 +82,6 @@ func (TimeAt) Fields() []ent.Field {
 	var fields []ent.Field
 	fields = append(fields, CreatedAt{}.Fields()...)
 	fields = append(fields, UpdatedAt{}.Fields()...)
-	fields = append(fields, DeletedAt{}.Fields()...)
 	return fields
 }
 

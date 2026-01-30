@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,11 @@ import (
 
 	entSql "entgo.io/ent/dialect/sql"
 )
+
+type EntTx interface {
+	Rollback() error
+	Commit() error
+}
 
 type EntClientInterface interface {
 	Close() error
@@ -35,14 +41,17 @@ func NewEntClient[T EntClientInterface](db T, drv *entSql.Driver) *EntClient[T] 
 	}
 }
 
+// Client 获取 Ent Client 实例
 func (c *EntClient[T]) Client() T {
 	return c.db
 }
 
+// Driver 获取 Ent SQL Driver 实例
 func (c *EntClient[T]) Driver() *entSql.Driver {
 	return c.drv
 }
 
+// DB 获取底层 sql.DB 实例
 func (c *EntClient[T]) DB() *sql.DB {
 	return c.drv.DB()
 }
@@ -57,6 +66,7 @@ func (c *EntClient[T]) Query(ctx context.Context, query string, args, v any) err
 	return c.Driver().Query(ctx, query, args, v)
 }
 
+// Exec 执行命令
 func (c *EntClient[T]) Exec(ctx context.Context, query string, args, v any) error {
 	return c.Driver().Exec(ctx, query, args, v)
 }
@@ -71,6 +81,7 @@ func (c *EntClient[T]) SetConnectionOption(maxIdleConnections, maxOpenConnection
 	c.DB().SetConnMaxLifetime(connMaxLifetime)
 }
 
+// driverNameToSemConvKeyValue 将数据库驱动名称映射到 OpenTelemetry 语义约定的 KeyValue
 func driverNameToSemConvKeyValue(driverName string) attribute.KeyValue {
 	switch driverName {
 	case "mariadb":
@@ -96,6 +107,8 @@ func CreateDriver(driverName, dsn string, enableTrace, enableMetrics bool) (*ent
 		// Connect to database with otel tracing
 		if db, err = otelsql.Open(driverName, dsn, otelsql.WithAttributes(
 			driverNameToSemConvKeyValue(driverName),
+		), otelsql.WithSpanOptions(
+			otelsql.SpanOptions{DisableErrSkip: true}, // mysql driver will return driver.ErrSkip when sql.conn.query
 		)); err != nil {
 			return nil, errors.New(fmt.Sprintf("failed opening connection to db: %v", err))
 		}
@@ -123,12 +136,8 @@ func CreateDriver(driverName, dsn string, enableTrace, enableMetrics bool) (*ent
 	return drv, nil
 }
 
-type Rollbacker interface {
-	Rollback() error
-}
-
 // Rollback calls to tx.Rollback and wraps the given error
-func Rollback[T Rollbacker](tx T, err error) error {
+func Rollback[T EntTx](tx T, err error) error {
 	if rErr := tx.Rollback(); rErr != nil {
 		if err == nil {
 			err = rErr
@@ -137,6 +146,54 @@ func Rollback[T Rollbacker](tx T, err error) error {
 		}
 	}
 	return err
+}
+
+// MakeTxCleanup 创建一个用于事务清理的函数
+func MakeTxCleanup(tx EntTx, errPtr *error) func() {
+	return func() {
+		// 如果调用者没有传入 errPtr，仍然要处理 panic 和提交失败（但无法回传错误）
+		if errPtr == nil {
+			// 处理 panic：回滚并重新 panic
+			if p := recover(); p != nil {
+				if rbErr := tx.Rollback(); rbErr != nil {
+					log.Errorf("transaction rollback failed during panic: %v", rbErr)
+				}
+				panic(p)
+			}
+			// 尝试提交并记录错误
+			if commitErr := tx.Commit(); commitErr != nil {
+				log.Errorf("transaction commit failed: %v", commitErr)
+			}
+			return
+		}
+
+		// errPtr != nil 的情况
+		// 处理 panic：将 panic 信息作为错误并回滚，随后重新 panic
+		if p := recover(); p != nil {
+			// 把 panic 作为错误传入 Rollback，以便合并回滚错误（如果有）
+			panicErr := fmt.Errorf("panic: %v", p)
+			*errPtr = Rollback(tx, panicErr)
+			if *errPtr == nil {
+				*errPtr = panicErr
+			}
+			panic(p)
+		}
+
+		// 如果已有错误，尝试回滚并合并回滚错误
+		if *errPtr != nil {
+			*errPtr = Rollback(tx, *errPtr)
+			if *errPtr != nil {
+				log.Errorf("transaction rollback encountered error: %v", *errPtr)
+			}
+			return
+		}
+
+		// 否则尝试提交，提交失败时包装错误返回
+		if commitErr := tx.Commit(); commitErr != nil {
+			log.Errorf("transaction commit failed: %v", commitErr)
+			*errPtr = fmt.Errorf("transaction commit failed: %w", commitErr)
+		}
+	}
 }
 
 // QueryAllChildrenIds 使用CTE递归查询所有子节点ID
@@ -302,4 +359,15 @@ func QuoteIdent(d string, s string) string {
 // EscapeLiteral 对作为 SQL 字面量传入的字符串做单引号转义（Postgres 用于 pg_get_serial_sequence 的第一个参数）
 func EscapeLiteral(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}
+
+// ComputeTreePath 计算树节点路径
+func ComputeTreePath(parentPath string, nodeID uint32) string {
+	if parentPath == "" {
+		return "/"
+	}
+	if parentPath[len(parentPath)-1] != '/' {
+		parentPath += "/"
+	}
+	return parentPath + strconv.FormatUint(uint64(nodeID), 10) + "/"
 }

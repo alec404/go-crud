@@ -11,7 +11,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 
 	paginationV1 "github.com/alec404/go-crud/api/gen/go/pagination/v1"
-	"github.com/alec404/go-crud/pagination"
+	"github.com/alec404/go-crud/pagination/filter"
 )
 
 // StructuredFilter 基于 FilterExpr 的过滤器
@@ -27,10 +27,8 @@ func NewStructuredFilter() *StructuredFilter {
 
 // BuildSelectors 构建过滤选择器
 func (sf StructuredFilter) BuildSelectors(expr *paginationV1.FilterExpr) ([]func(s *sql.Selector), error) {
-	var queryConditions []func(s *sql.Selector)
-
 	if expr == nil {
-		return queryConditions, nil
+		return nil, nil
 	}
 
 	// Skip unspecified expressions
@@ -43,6 +41,8 @@ func (sf StructuredFilter) BuildSelectors(expr *paginationV1.FilterExpr) ([]func
 	if err != nil {
 		return nil, err
 	}
+
+	var queryConditions []func(s *sql.Selector)
 	if selector != nil {
 		queryConditions = append(queryConditions, selector)
 	}
@@ -86,11 +86,13 @@ func (sf StructuredFilter) buildFilterSelector(expr *paginationV1.FilterExpr) (f
 		}
 
 		// Combine predicates based on expression type
-		switch expr.GetType() {
-		case paginationV1.ExprType_AND:
-			s.Where(sql.And(ps...))
-		case paginationV1.ExprType_OR:
-			s.Where(sql.Or(ps...))
+		if len(ps) > 0 {
+			switch expr.GetType() {
+			case paginationV1.ExprType_AND:
+				s.Where(sql.And(ps...))
+			case paginationV1.ExprType_OR:
+				s.Where(sql.Or(ps...))
+			}
 		}
 	}
 
@@ -442,7 +444,7 @@ func (sf StructuredFilter) DatePart(s *sql.Selector, p *sql.Predicate, condition
 		return p
 	}
 
-	datePart := pagination.ConverterDatePartToString(condition.DatePart)
+	datePart := filter.ConverterDatePartToString(condition.DatePart)
 	datePart = strings.ToUpper(datePart)
 
 	p.Append(func(b *sql.Builder) {
@@ -482,7 +484,7 @@ func (sf StructuredFilter) DatePartField(s *sql.Selector, condition *paginationV
 		return ""
 	}
 
-	datePart := pagination.ConverterDatePartToString(condition.DatePart)
+	datePart := filter.ConverterDatePartToString(condition.DatePart)
 	datePart = strings.ToUpper(datePart)
 
 	p := sql.P()
