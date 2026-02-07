@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	paginationV1 "github.com/alec404/go-crud/api/gen/go/pagination/v1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -66,4 +67,87 @@ func AnyToString(v any) string {
 		s := fmt.Sprintf("%v", t)
 		return s
 	}
+}
+
+// RemoveExcludedConditions 从 filterExpr 中移除指定的字段条件（就地修改），
+// 并返回被移除的条件列表。
+func RemoveExcludedConditions(filterExpr *paginationV1.FilterExpr, excludeFields []string) []*paginationV1.FilterCondition {
+	if filterExpr == nil || len(filterExpr.Conditions) == 0 {
+		return []*paginationV1.FilterCondition{}
+	}
+
+	exclude := make(map[string]struct{}, len(excludeFields))
+	for _, f := range excludeFields {
+		if f == "" {
+			continue
+		}
+		exclude[f] = struct{}{}
+	}
+
+	includeConditions := make([]*paginationV1.FilterCondition, 0, len(filterExpr.Conditions))
+	excludeConditions := make([]*paginationV1.FilterCondition, 0, len(filterExpr.Conditions))
+	for _, cond := range filterExpr.Conditions {
+		if cond == nil || cond.Field == "" {
+			continue
+		}
+		if _, skip := exclude[cond.Field]; skip {
+			excludeConditions = append(excludeConditions, cond)
+			continue
+		}
+		includeConditions = append(includeConditions, cond)
+	}
+
+	filterExpr.Conditions = includeConditions
+
+	return excludeConditions
+}
+
+// ClearFilterExprByFieldNames 从 FilterExpr 中移除指定字段名的所有条件（就地修改）
+func ClearFilterExprByFieldNames(expr *paginationV1.FilterExpr, fieldName string) {
+	if expr == nil {
+		return
+	}
+
+	for i := len(expr.GetConditions()) - 1; i >= 0; i-- {
+		cond := expr.GetConditions()[i]
+		if cond.GetField() == fieldName {
+			expr.Conditions = append(expr.Conditions[:i], expr.Conditions[i+1:]...)
+		}
+	}
+
+	for _, subExpr := range expr.GetGroups() {
+		ClearFilterExprByFieldNames(subExpr, fieldName)
+	}
+}
+
+// FilterFields 过滤掉不需要的字段条件
+func FilterFields(filterExpr *paginationV1.FilterExpr, excludeFields []string) []*paginationV1.FilterCondition {
+	if filterExpr == nil || len(filterExpr.Conditions) == 0 {
+		return []*paginationV1.FilterCondition{}
+	}
+
+	exclude := make(map[string]struct{}, len(excludeFields))
+	for _, f := range excludeFields {
+		if f == "" {
+			continue
+		}
+		exclude[f] = struct{}{}
+	}
+
+	includeConditions := make([]*paginationV1.FilterCondition, 0, len(filterExpr.Conditions))
+	excludeConditions := make([]*paginationV1.FilterCondition, 0, len(filterExpr.Conditions))
+	for _, cond := range filterExpr.Conditions {
+		if cond == nil || cond.Field == "" {
+			continue
+		}
+		if _, skip := exclude[cond.Field]; skip {
+			excludeConditions = append(excludeConditions, cond)
+			continue
+		}
+		includeConditions = append(includeConditions, cond)
+	}
+
+	filterExpr.Conditions = includeConditions
+
+	return excludeConditions
 }
