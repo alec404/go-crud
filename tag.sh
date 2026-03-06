@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 # tag.sh
 
-git tag v0.0.1
+set -euo pipefail
 
-git tag api/v0.0.3
-git tag pagination/v0.0.3
-git tag entgo/v0.0.3
-git tag viewer/v0.0.1
+tags=(
+  "v0.0.1"
+  "api/v0.0.3"
+  "pagination/v0.0.4"
+  "entgo/v0.0.4"
+  "viewer/v0.0.1"
+)
 
-git push origin --tags
+for tag in "${tags[@]}"; do
+  if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+    echo "skip existing tag: $tag"
+    continue
+  fi
+  git tag "$tag"
+done
+
+git push origin "${tags[@]}"
