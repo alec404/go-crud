@@ -20,6 +20,10 @@ cd $DIR/entgo
 go get all
 go mod tidy
 
-cd $DIR/viwer
+cd $DIR/opensearch
+go get all
+go mod tidy
+
+cd $DIR/viewer
 go get all
 go mod tidy

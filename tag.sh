@@ -8,6 +8,7 @@ tags=(
   "api/v0.0.3"
   "pagination/v0.0.4"
   "entgo/v0.0.4"
+  "opensearch/v0.0.1"
   "viewer/v0.0.1"
 )
 

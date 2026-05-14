@@ -5,3 +5,4 @@ go-crud 是一个基于 Go 语言的 CRUD（创建、读取、更新、删除）
 ## 支持的ORM或者数据库
 
 - ENT [✅]
+- OpenSearch [✅]
