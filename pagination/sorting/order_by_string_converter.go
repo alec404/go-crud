@@ -129,13 +129,5 @@ func normalizeOrderField(field string) string {
 		return ""
 	}
 
-	if !strings.Contains(field, ".") {
-		return stringcase.ToSnakeCase(field)
-	}
-
-	parts := strings.Split(field, ".")
-	for i, part := range parts {
-		parts[i] = stringcase.ToSnakeCase(strings.TrimSpace(part))
-	}
-	return strings.Join(parts, ".")
+	return stringcase.ToSnakeCase(field)
 }
