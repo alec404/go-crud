@@ -74,8 +74,7 @@ func (obc OrderByStringConverter) ParseJsonString(orderByJson string) ([]*pagina
 			isDesc = false
 		}
 
-		field = strings.TrimSpace(field)
-		field = stringcase.ToSnakeCase(field)
+		field = normalizeOrderField(field)
 
 		if !isDesc {
 			sortings = append(sortings, &paginationV1.Sorting{
@@ -116,10 +115,27 @@ func (obc OrderByStringConverter) ParseAIPString(orderByString string) ([]*pagin
 		}
 
 		sortings = append(sortings, &paginationV1.Sorting{
-			Field:     item.Path,
+			Field:     normalizeOrderField(item.Path),
 			Direction: direction,
 		})
 	}
 
 	return sortings, nil
+}
+
+func normalizeOrderField(field string) string {
+	field = strings.TrimSpace(field)
+	if field == "" {
+		return ""
+	}
+
+	if !strings.Contains(field, ".") {
+		return stringcase.ToSnakeCase(field)
+	}
+
+	parts := strings.Split(field, ".")
+	for i, part := range parts {
+		parts[i] = stringcase.ToSnakeCase(strings.TrimSpace(part))
+	}
+	return strings.Join(parts, ".")
 }

@@ -33,13 +33,13 @@ func TestOrderByStringConverter_ParseJsonString_AllEmptyItems(t *testing.T) {
 
 func TestOrderByStringConverter_Convert_JSON_SnakeCaseAndDirection(t *testing.T) {
 	obc := NewOrderByStringConverter()
-	input := `["-createTime", "Name"]`
+	input := `["-createTime", "Name", "-user.profileName"]`
 	got, err := obc.Convert(input)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(got) != 2 {
-		t.Fatalf("expected 2 sortings, got %d: %#v", len(got), got)
+	if len(got) != 3 {
+		t.Fatalf("expected 3 sortings, got %d: %#v", len(got), got)
 	}
 
 	if got[0].Field != "create_time" || got[0].Direction != paginationV1.Sorting_DESC {
@@ -47,6 +47,9 @@ func TestOrderByStringConverter_Convert_JSON_SnakeCaseAndDirection(t *testing.T)
 	}
 	if got[1].Field != "name" || got[1].Direction != paginationV1.Sorting_ASC {
 		t.Fatalf("second sorting mismatch, want field=name dir=ASC, got: %#v", got[1])
+	}
+	if got[2].Field != "user.profile_name" || got[2].Direction != paginationV1.Sorting_DESC {
+		t.Fatalf("third sorting mismatch, want field=user.profile_name dir=DESC, got: %#v", got[2])
 	}
 }
 
@@ -104,6 +107,22 @@ func TestOrderByStringConverter_Convert_AIPFormat(t *testing.T) {
 			want: []*paginationV1.Sorting{
 				{Field: "foo", Direction: paginationV1.Sorting_ASC},
 				{Field: "bar", Direction: paginationV1.Sorting_DESC},
+			},
+		},
+		{
+			name:  "camel case fields",
+			input: "createdAt desc, updatedAt",
+			want: []*paginationV1.Sorting{
+				{Field: "created_at", Direction: paginationV1.Sorting_DESC},
+				{Field: "updated_at", Direction: paginationV1.Sorting_ASC},
+			},
+		},
+		{
+			name:  "dotted path fields",
+			input: "user.profileName desc, UserProfile.createdAt",
+			want: []*paginationV1.Sorting{
+				{Field: "user.profile_name", Direction: paginationV1.Sorting_DESC},
+				{Field: "user_profile.created_at", Direction: paginationV1.Sorting_ASC},
 			},
 		},
 	}
